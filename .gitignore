@@ -1,0 +1,106 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+.next/
+.nuxt/
+out/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+jest-coverage/
+
+# Server-specific
+server/node_modules/
+server/.env
+server/.env.local
+server/coverage/
+server/dist/
+
+# Client-specific
+client/node_modules/
+client/.env.local
+client/dist/
+client/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+mongodb/
+data/
+
+# Uploads and media
+uploads/
+public/uploads/
+
+# Backup files
+*.bak
+*.backup
+~*
+
+# Lock files (if using npm)
+package-lock.json
+
+# Cache
+.cache/
+.eslintcache
+.prettierignore
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Node
+node_modules/
+dist/

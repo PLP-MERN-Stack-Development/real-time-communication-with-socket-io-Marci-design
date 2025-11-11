@@ -6,9 +6,23 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const jwt = require('jsonwebtoken');  
+const connectDB = require('./config/db');
 
 // Load environment variables
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
+
+// Import data models
+const models = {
+  User: require('./models/User'),
+  Message: require('./models/Message'),
+  Room: require('./models/Room'),
+  Attachment: require('./models/Attachment'),
+  Activity: require('./models/Activity'),
+};
 
 // Initialize Express app
 const app = express();
@@ -26,97 +40,29 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Mount API routes
+app.use('/api/auth', require(path.join(__dirname, 'routes', 'auth')));
+app.use('/api/messages', require(path.join(__dirname, 'routes', 'messages')));
+app.use('/api/users', require(path.join(__dirname, 'routes', 'users')));
+app.use('/api/rooms', require(path.join(__dirname, 'routes', 'rooms')));
+app.use('/health', require(path.join(__dirname, 'routes', 'health')));
+
 // Store connected users and messages
 const users = {};
 const messages = [];
 const typingUsers = {};
 
-// Socket.io connection handler
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+// Delegate Socket.IO handlers to socket/handlers.js for better separation of concerns
+require(path.join(__dirname, 'socket', 'handlers'))(io, { users, messages, typingUsers });
 
-  // Handle user joining
-  socket.on('user_join', (username) => {
-    users[socket.id] = { username, id: socket.id };
-    io.emit('user_list', Object.values(users));
-    io.emit('user_joined', { username, id: socket.id });
-    console.log(`${username} joined the chat`);
-  });
-
-  // Handle chat messages
-  socket.on('send_message', (messageData) => {
-    const message = {
-      ...messageData,
-      id: Date.now(),
-      sender: users[socket.id]?.username || 'Anonymous',
-      senderId: socket.id,
-      timestamp: new Date().toISOString(),
-    };
-    
-    messages.push(message);
-    
-    // Limit stored messages to prevent memory issues
-    if (messages.length > 100) {
-      messages.shift();
-    }
-    
-    io.emit('receive_message', message);
-  });
-
-  // Handle typing indicator
-  socket.on('typing', (isTyping) => {
-    if (users[socket.id]) {
-      const username = users[socket.id].username;
-      
-      if (isTyping) {
-        typingUsers[socket.id] = username;
-      } else {
-        delete typingUsers[socket.id];
-      }
-      
-      io.emit('typing_users', Object.values(typingUsers));
-    }
-  });
-
-  // Handle private messages
-  socket.on('private_message', ({ to, message }) => {
-    const messageData = {
-      id: Date.now(),
-      sender: users[socket.id]?.username || 'Anonymous',
-      senderId: socket.id,
-      message,
-      timestamp: new Date().toISOString(),
-      isPrivate: true,
-    };
-    
-    socket.to(to).emit('private_message', messageData);
-    socket.emit('private_message', messageData);
-  });
-
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    if (users[socket.id]) {
-      const { username } = users[socket.id];
-      io.emit('user_left', { username, id: socket.id });
-      console.log(`${username} left the chat`);
-    }
-    
-    delete users[socket.id];
-    delete typingUsers[socket.id];
-    
-    io.emit('user_list', Object.values(users));
-    io.emit('typing_users', Object.values(typingUsers));
-  });
-});
-
-// API routes
-app.get('/api/messages', (req, res) => {
-  res.json(messages);
-});
-
-app.get('/api/users', (req, res) => {
-  res.json(Object.values(users));
-});
+// Old API routes (kept for compatibility, but prefer the new route files above)
+// app.get('/api/messages', (req, res) => {
+//   res.json(messages);
+// });
+//
+// app.get('/api/users', (req, res) => {
+//   res.json(Object.values(users));
+// });
 
 // Root route
 app.get('/', (req, res) => {
@@ -129,4 +75,4 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = { app, server, io }; 
+module.exports = { app, server, io, models }; 
